@@ -5,7 +5,7 @@ import Debug exposing (log)
 import Html exposing (Html, button, div, option, select, text)
 import Html.Events exposing (onClick, onInput)
 import Http
-import Json.Encode exposing (encode, string)
+import Json.Encode exposing (encode, list)
 
 
 
@@ -88,7 +88,7 @@ update msg model =
             ( { model | safety = selected }, Cmd.none )
 
         SendHttpRequest ->
-            ( model, getPrediction )
+            ( model, getPrediction model )
 
         DataReceived result ->
             case result of
@@ -154,7 +154,7 @@ factors =
     { buying = [ "low", "med", "high", "vhigh" ]
     , maint = [ "low", "med", "high", "vhigh" ]
     , doors = [ "2", "3", "4", "5more" ]
-    , persons = [ "2", "4", "5more" ]
+    , persons = [ "2", "4", "more" ]
     , lug_boot = [ "small", "med", "big" ]
     , safety = [ "low", "med", "high" ]
     }
@@ -175,13 +175,22 @@ url =
 --    "https://jsonplaceholder.typicode.com/posts/1"
 
 
-getPrediction : Cmd Msg
-getPrediction =
+getPrediction : Model -> Cmd Msg
+getPrediction model =
     Http.post
         { url = url
-        , body = Http.stringBody "application/json" "{\"data\": [[\"low\", \"low\", \"3\", \"more\", \"big\", \"high\"]] }"
+        , body = Http.jsonBody (postEncoder model)
         , expect = Http.expectString DataReceived
         }
+
+
+postEncoder : Model -> Json.Encode.Value
+postEncoder model =
+    let
+        selectedList =
+            [ model.buying, model.maint, model.doors, model.persons, model.lug_boot, model.safety ]
+    in
+    Json.Encode.object [ ( "data", Json.Encode.list identity [ Json.Encode.list Json.Encode.string selectedList ] ) ]
 
 
 
