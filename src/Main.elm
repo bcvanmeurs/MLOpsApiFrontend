@@ -1,8 +1,11 @@
 module Main exposing (..)
 
 import Browser
+import Debug exposing (log)
 import Html exposing (Html, button, div, option, select, text)
 import Html.Events exposing (onClick, onInput)
+import Http
+import Json.Encode exposing (encode, string)
 
 
 
@@ -11,7 +14,12 @@ import Html.Events exposing (onClick, onInput)
 
 main : Program () Model Msg
 main =
-    Browser.sandbox { init = init, update = update, view = view }
+    Browser.element
+        { init = init
+        , update = update
+        , subscriptions = subscriptions
+        , view = view
+        }
 
 
 
@@ -25,18 +33,22 @@ type alias Model =
     , maint : String
     , persons : String
     , safety : String
+    , result : String
     }
 
 
-init : Model
-init =
-    { buying = "low"
-    , maint = "low"
-    , doors = "2"
-    , persons = "2"
-    , lug_boot = "small"
-    , safety = "low"
-    }
+init : () -> ( Model, Cmd Msg )
+init _ =
+    ( { buying = "low"
+      , maint = "low"
+      , doors = "2"
+      , persons = "2"
+      , lug_boot = "small"
+      , safety = "low"
+      , result = "res"
+      }
+    , Cmd.none
+    )
 
 
 
@@ -50,28 +62,50 @@ type Msg
     | Persons String
     | Lug_boot String
     | Safety String
+    | SendHttpRequest
+    | DataReceived (Result Http.Error String)
 
 
-update : Msg -> Model -> Model
+update : Msg -> Model -> ( Model, Cmd Msg )
 update msg model =
     case msg of
         Buying selected ->
-            { model | buying = selected }
+            ( { model | buying = selected }, Cmd.none )
 
         Maint selected ->
-            { model | maint = selected }
+            ( { model | maint = selected }, Cmd.none )
 
         Doors selected ->
-            { model | doors = selected }
+            ( { model | doors = selected }, Cmd.none )
 
         Persons selected ->
-            { model | persons = selected }
+            ( { model | persons = selected }, Cmd.none )
 
         Lug_boot selected ->
-            { model | lug_boot = selected }
+            ( { model | lug_boot = selected }, Cmd.none )
 
         Safety selected ->
-            { model | safety = selected }
+            ( { model | safety = selected }, Cmd.none )
+
+        SendHttpRequest ->
+            ( model, getPrediction )
+
+        DataReceived result ->
+            case result of
+                Ok response ->
+                    ( { model | result = response }, Cmd.none )
+
+                Err error ->
+                    ( model, Cmd.none )
+
+
+
+-- SUBSCRIPTIONS
+
+
+subscriptions : Model -> Sub Msg
+subscriptions model =
+    Sub.none
 
 
 
@@ -107,7 +141,13 @@ view model =
                 , select [ onInput Safety ] (getOptions factors.safety)
                 ]
             ]
+        , div [] [ button [ onClick SendHttpRequest ] [ text "test" ] ]
+        , div [] [ text model.result ]
         ]
+
+
+
+-- HELPER FUNCTIONS
 
 
 factors =
@@ -120,12 +160,29 @@ factors =
     }
 
 
-
--- generateSelect : String -> List String -> Html Msg
--- generateSelect string list =
---     select [ onInput Test ] (getOptions factors.buying)
-
-
 getOptions : List String -> List (Html msg)
 getOptions list =
     List.map (\item -> option [] [ text item ]) list
+
+
+url : String
+url =
+    "https://cors-anywhere.herokuapp.com/http://86357569-2159-41d2-9e7b-503afe9ed019.uksouth.azurecontainer.io/score"
+
+
+
+--    "http://86357569-2159-41d2-9e7b-503afe9ed019.uksouth.azurecontainer.io/score"
+--    "https://jsonplaceholder.typicode.com/posts/1"
+
+
+getPrediction : Cmd Msg
+getPrediction =
+    Http.post
+        { url = url
+        , body = Http.stringBody "application/json" "{\"data\": [[\"low\", \"low\", \"3\", \"more\", \"big\", \"high\"]] }"
+        , expect = Http.expectString DataReceived
+        }
+
+
+
+--{'data': [['low', 'high', '3', '5more', 'big', 'low']] }
