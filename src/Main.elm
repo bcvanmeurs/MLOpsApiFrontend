@@ -1,7 +1,7 @@
 module Main exposing (..)
 
 import Browser
-import Html exposing (Html, button, div, input, label, option, select, text)
+import Html exposing (Html, button, div, h1, input, label, option, select, text)
 import Html.Attributes exposing (class, placeholder)
 import Html.Events exposing (onClick, onInput)
 import Http
@@ -123,11 +123,13 @@ subscriptions model =
 view : Model -> Html Msg
 view model =
     div [ class "container" ]
-        [ div [ class "mt-4" ]
+        [ h1 [ class "display-5 mt-4" ] [ text "Car acceptability inferencing" ]
+        , div [ class "mt-4" ]
             [ label [ class "form-label" ] [ text "API endpoint" ]
             , input [ class "form-control", placeholder model.url, onInput URL ] []
             ]
         , div [ class "row gx-4 my-4" ]
+            -- TODO make function
             [ div [ class "col" ]
                 [ text "Buying price"
                 , select [ class "form-select", onInput Buying ] (getOptions factors.buying)
@@ -170,6 +172,7 @@ view model =
 
 
 factors =
+    -- TODO make dict
     { buying = [ "low", "med", "high", "vhigh" ]
     , maint = [ "low", "med", "high", "vhigh" ]
     , doors = [ "2", "3", "4", "5more" ]
