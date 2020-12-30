@@ -1,12 +1,11 @@
 module Main exposing (..)
 
 import Browser
-import Debug exposing (log)
-import Html exposing (Html, button, div, input, label, option, p, select, text)
-import Html.Attributes exposing (..)
+import Html exposing (Html, button, div, input, label, option, select, text)
+import Html.Attributes exposing (class, placeholder)
 import Html.Events exposing (onClick, onInput)
 import Http
-import Json.Encode exposing (encode, list)
+import Json.Encode as Encode
 
 
 
@@ -156,7 +155,7 @@ view model =
             ]
         , div [ class "mb-4" ]
             [ label [ class "form-label" ] [ text "Composed API request" ]
-            , div [ class "alert alert-primary" ] [ text (encode 4 (postEncoder model)) ]
+            , div [ class "alert alert-primary" ] [ text (Encode.encode 4 (postEncoder model)) ]
             ]
         , div [ class "mb-4" ] [ button [ class "btn btn-primary", onClick SendHttpRequest ] [ text "Send to API endpoint" ] ]
         , div [ class "mt-4" ]
@@ -185,38 +184,19 @@ getOptions list =
     List.map (\item -> option [] [ text item ]) list
 
 
-url : String
-url =
-    "https://cors-anywhere.herokuapp.com/"
-
-
-
---    "http://86357569-2159-41d2-9e7b-503afe9ed019.uksouth.azurecontainer.io/score"
---    "https://jsonplaceholder.typicode.com/posts/1"
-
-
 getPrediction : Model -> Cmd Msg
 getPrediction model =
     Http.post
-        { url = url ++ model.url
+        { url = "https://cors-anywhere.herokuapp.com/" ++ model.url
         , body = Http.jsonBody (postEncoder model)
         , expect = Http.expectString DataReceived
         }
 
 
-postEncoder : Model -> Json.Encode.Value
+postEncoder : Model -> Encode.Value
 postEncoder model =
     let
         selectedList =
             [ model.buying, model.maint, model.doors, model.persons, model.lug_boot, model.safety ]
     in
-    Json.Encode.object [ ( "data", Json.Encode.list identity [ Json.Encode.list Json.Encode.string selectedList ] ) ]
-
-
-postToString : Json.Encode.Value -> String
-postToString post =
-    encode 4 post
-
-
-
---{'data': [['low', 'high', '3', '5more', 'big', 'low']] }
+    Encode.object [ ( "data", Encode.list identity [ Encode.list Encode.string selectedList ] ) ]
