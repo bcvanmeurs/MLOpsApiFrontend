@@ -49,8 +49,8 @@ init _ =
       , lug_boot = "small"
       , safety = "low"
       , request = ""
-      , result = ""
-      , url = "htt://"
+      , result = "Press button to send first API request"
+      , url = "http://86357569-2159-41d2-9e7b-503afe9ed019.uksouth.azurecontainer.io/score"
       }
     , Cmd.none
     )
@@ -61,7 +61,8 @@ init _ =
 
 
 type Msg
-    = Buying String
+    = URL String
+    | Buying String
     | Maint String
     | Doors String
     | Persons String
@@ -74,6 +75,9 @@ type Msg
 update : Msg -> Model -> ( Model, Cmd Msg )
 update msg model =
     case msg of
+        URL url ->
+            ( { model | url = url }, Cmd.none )
+
         Buying selected ->
             ( { model | buying = selected }, Cmd.none )
 
@@ -93,7 +97,7 @@ update msg model =
             ( { model | safety = selected }, Cmd.none )
 
         SendHttpRequest ->
-            ( model, getPrediction model )
+            ( { model | result = "waiting for response" }, getPrediction model )
 
         DataReceived result ->
             case result of
@@ -122,7 +126,7 @@ view model =
     div [ class "container" ]
         [ div [ class "mt-4" ]
             [ label [ class "form-label" ] [ text "API endpoint" ]
-            , input [ class "form-control", placeholder model.url ] []
+            , input [ class "form-control", placeholder model.url, onInput URL ] []
             ]
         , div [ class "row gx-4 my-4" ]
             [ div [ class "col" ]
