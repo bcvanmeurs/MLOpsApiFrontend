@@ -131,27 +131,27 @@ view model =
         , div [ class "row gx-4 my-4" ]
             -- TODO make function
             [ div [ class "col" ]
-                [ text "Buying price"
+                [ label [ class "form-label" ] [ text "Buying price" ]
                 , select [ class "form-select", onInput Buying ] (getOptions factors.buying)
                 ]
             , div [ class "col" ]
-                [ text "Maintenance price"
+                [ label [ class "form-label" ] [ text "Maintenance price" ]
                 , select [ class "form-select", onInput Maint ] (getOptions factors.maint)
                 ]
             , div [ class "col" ]
-                [ text "Number of doors"
+                [ label [ class "form-label" ] [ text "Number of doors" ]
                 , select [ class "form-select", onInput Doors ] (getOptions factors.doors)
                 ]
             , div [ class "col" ]
-                [ text "Number of persons"
+                [ label [ class "form-label" ] [ text "Number of persons" ]
                 , select [ class "form-select", onInput Persons ] (getOptions factors.persons)
                 ]
             , div [ class "col" ]
-                [ text "Luggage boot size"
+                [ label [ class "form-label" ] [ text "Luggage boot size" ]
                 , select [ class "form-select", onInput Lug_boot ] (getOptions factors.lug_boot)
                 ]
             , div [ class "col" ]
-                [ text "Estimated safety"
+                [ label [ class "form-label" ] [ text "Estimated safety" ]
                 , select [ class "form-select", onInput Safety ] (getOptions factors.safety)
                 ]
             ]
