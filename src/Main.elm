@@ -2,7 +2,8 @@ module Main exposing (..)
 
 import Browser
 import Debug exposing (log)
-import Html exposing (Html, button, div, option, select, text)
+import Html exposing (Html, button, div, input, label, option, p, select, text)
+import Html.Attributes exposing (..)
 import Html.Events exposing (onClick, onInput)
 import Http
 import Json.Encode exposing (encode, list)
@@ -33,7 +34,9 @@ type alias Model =
     , maint : String
     , persons : String
     , safety : String
+    , request : String
     , result : String
+    , url : String
     }
 
 
@@ -45,7 +48,9 @@ init _ =
       , persons = "2"
       , lug_boot = "small"
       , safety = "low"
-      , result = "res"
+      , request = ""
+      , result = ""
+      , url = "htt://"
       }
     , Cmd.none
     )
@@ -114,35 +119,46 @@ subscriptions model =
 
 view : Model -> Html Msg
 view model =
-    div []
-        [ div []
-            [ div []
-                [ text model.buying
-                , select [ onInput Buying ] (getOptions factors.buying)
+    div [ class "container" ]
+        [ div [ class "mt-4" ]
+            [ label [ class "form-label" ] [ text "API endpoint" ]
+            , input [ class "form-control", placeholder model.url ] []
+            ]
+        , div [ class "row gx-4 my-4" ]
+            [ div [ class "col" ]
+                [ text "Buying price"
+                , select [ class "form-select", onInput Buying ] (getOptions factors.buying)
                 ]
-            , div []
-                [ text model.maint
-                , select [ onInput Maint ] (getOptions factors.maint)
+            , div [ class "col" ]
+                [ text "Maintenance price"
+                , select [ class "form-select", onInput Maint ] (getOptions factors.maint)
                 ]
-            , div []
-                [ text model.doors
-                , select [ onInput Doors ] (getOptions factors.doors)
+            , div [ class "col" ]
+                [ text "Number of doors"
+                , select [ class "form-select", onInput Doors ] (getOptions factors.doors)
                 ]
-            , div []
-                [ text model.persons
-                , select [ onInput Persons ] (getOptions factors.persons)
+            , div [ class "col" ]
+                [ text "Number of persons"
+                , select [ class "form-select", onInput Persons ] (getOptions factors.persons)
                 ]
-            , div []
-                [ text model.lug_boot
-                , select [ onInput Lug_boot ] (getOptions factors.lug_boot)
+            , div [ class "col" ]
+                [ text "Luggage boot size"
+                , select [ class "form-select", onInput Lug_boot ] (getOptions factors.lug_boot)
                 ]
-            , div []
-                [ text model.safety
-                , select [ onInput Safety ] (getOptions factors.safety)
+            , div [ class "col" ]
+                [ text "Estimated safety"
+                , select [ class "form-select", onInput Safety ] (getOptions factors.safety)
                 ]
             ]
-        , div [] [ button [ onClick SendHttpRequest ] [ text "test" ] ]
-        , div [] [ text model.result ]
+        , div [ class "mb-4" ]
+            [ label [ class "form-label" ] [ text "Composed API request" ]
+            , div [ class "alert alert-primary" ] [ text (encode 4 (postEncoder model)) ]
+            ]
+        , div [ class "mb-4" ] [ button [ class "btn btn-primary", onClick SendHttpRequest ] [ text "Send to API endpoint" ] ]
+        , div [ class "mt-4" ]
+            [ label [ class "form-label" ] [ text "API response" ]
+            , div [ class "alert alert-primary" ] [ text model.result ]
+            ]
         ]
 
 
@@ -167,7 +183,7 @@ getOptions list =
 
 url : String
 url =
-    "https://cors-anywhere.herokuapp.com/http://86357569-2159-41d2-9e7b-503afe9ed019.uksouth.azurecontainer.io/score"
+    "https://cors-anywhere.herokuapp.com/"
 
 
 
@@ -178,7 +194,7 @@ url =
 getPrediction : Model -> Cmd Msg
 getPrediction model =
     Http.post
-        { url = url
+        { url = url ++ model.url
         , body = Http.jsonBody (postEncoder model)
         , expect = Http.expectString DataReceived
         }
@@ -191,6 +207,11 @@ postEncoder model =
             [ model.buying, model.maint, model.doors, model.persons, model.lug_boot, model.safety ]
     in
     Json.Encode.object [ ( "data", Json.Encode.list identity [ Json.Encode.list Json.Encode.string selectedList ] ) ]
+
+
+postToString : Json.Encode.Value -> String
+postToString post =
+    encode 4 post
 
 
 
